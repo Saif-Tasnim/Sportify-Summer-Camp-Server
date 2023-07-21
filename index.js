@@ -27,7 +27,7 @@ const verifyJWT = (req, res, next) => {
   const token = authorization.split(" ")[1]
 
   const check = token === process.env.JSON_SECRET_KEY;
-  
+
   jwt.verify(token, process.env.JSON_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.status(401).send({ error: true, message: 'unauthorized access' });
@@ -62,7 +62,7 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // user info
-    app.get('/users' , verifyJWT , async(req,res) => {
+    app.get('/users', verifyJWT, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
@@ -80,19 +80,55 @@ async function run() {
 
     })
 
-    app.patch('/users/admin/:id' , verifyJWT , async(req,res) => {
+    app.patch('/users/admin/:id', verifyJWT, async (req, res) => {
       const id = req.params.id
       // console.log(id);
-      const query = {_id : new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
 
       const updateDoc = {
-        $set : {
-          role : "Admin"
+        $set: {
+          role: "Admin"
         }
       }
 
       const result = await userCollection.updateOne(query, updateDoc);
       res.send(result);
+
+    })
+
+    app.patch('/users/instructor/:id', verifyJWT, async(req, res) => {
+      const id = req.params.id
+      // console.log(id);
+      const query = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          role: "Instructor"
+        }
+      }
+
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result);
+
+    })
+
+    // get admin routes
+    app.get('user/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false })
+
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { admin: user?.role === 'Admin' };
+      res.send(result);
+    })
+
+    // get instructor routes
+    app.get('users/instructor/:email', verifyJWT, async (req, res) => {
 
     })
 
