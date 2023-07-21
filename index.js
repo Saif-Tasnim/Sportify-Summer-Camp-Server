@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 
@@ -76,6 +76,22 @@ async function run() {
       }
 
       const result = await userCollection.insertOne(user);
+      res.send(result);
+
+    })
+
+    app.patch('/users/admin/:id' , verifyJWT , async(req,res) => {
+      const id = req.params.id
+      // console.log(id);
+      const query = {_id : new ObjectId(id)};
+
+      const updateDoc = {
+        $set : {
+          role : "Admin"
+        }
+      }
+
+      const result = await userCollection.updateOne(query, updateDoc);
       res.send(result);
 
     })
