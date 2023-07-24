@@ -26,8 +26,6 @@ const verifyJWT = (req, res, next) => {
   // it will carry bearer token thats why it has to split 
   const token = authorization.split(" ")[1]
 
-  const check = token === process.env.JSON_SECRET_KEY;
-
   jwt.verify(token, process.env.JSON_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.status(401).send({ error: true, message: 'unauthorized access' });
@@ -61,8 +59,21 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
+    //verify admin route
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+
+      if (user?.role !== 'Admin') {
+        return res.status(403).send('Forbidden Access');
+      }
+
+      next();
+    }
+
     // user info
-    app.get('/users', verifyJWT, async (req, res) => {
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
@@ -96,7 +107,7 @@ async function run() {
 
     })
 
-    app.patch('/users/instructor/:id', verifyJWT, async(req, res) => {
+    app.patch('/users/instructor/:id', verifyJWT, async (req, res) => {
       const id = req.params.id
       // console.log(id);
       const query = { _id: new ObjectId(id) };
@@ -113,11 +124,11 @@ async function run() {
     })
 
     // get admin routes
-    app.get('user/admin/:email', verifyJWT, async (req, res) => {
+    app.get('/user/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
-        res.send({ admin: false })
+        return res.send({ admin: false })
 
       }
 
@@ -128,8 +139,18 @@ async function run() {
     })
 
     // get instructor routes
-    app.get('users/instructor/:email', verifyJWT, async (req, res) => {
+    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
 
+      if (req.decoded.email !== email) {
+        return res.send({ instructor: false })
+
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { instructor: user?.role === 'Instructor' };
+      res.send(result);
     })
 
 
