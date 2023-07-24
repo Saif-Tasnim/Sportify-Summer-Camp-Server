@@ -126,8 +126,13 @@ async function run() {
     })
 
     // class collection
+    app.post('/class', verifyJWT, async (req, res) => {
+      const data = req.body;
+      const result = await classCollection.insertOne(data);
+      res.send(result);
 
-    
+    })
+
 
     // get admin routes
     app.get('/user/admin/:email', verifyJWT, async (req, res) => {
