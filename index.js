@@ -53,7 +53,9 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
     const userCollection = client.db("Sportify-Summer-Camp").collection("user");
+    const classCollection = client.db("Sportify-Summer-Camp").collection("class");
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -122,6 +124,10 @@ async function run() {
       res.send(result);
 
     })
+
+    // class collection
+
+    
 
     // get admin routes
     app.get('/user/admin/:email', verifyJWT, async (req, res) => {
