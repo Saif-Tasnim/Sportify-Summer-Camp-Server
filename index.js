@@ -126,6 +126,11 @@ async function run() {
     })
 
     // class collection
+    app.get('/class' , async(req,res)=>{
+      const result = await classCollection.find().toArray();
+      res.send(result);
+    })
+    
     app.get('/class/:email' , verifyJWT, async(req,res) => {
       const email = req.params.email;
       const query = {email : email};
