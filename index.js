@@ -126,6 +126,14 @@ async function run() {
     })
 
     // class collection
+    app.get('/class/:email' , verifyJWT, async(req,res) => {
+      const email = req.params.email;
+      const query = {email : email};
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+
+    })
+
     app.post('/class', verifyJWT, async (req, res) => {
       const data = req.body;
       const result = await classCollection.insertOne(data);
