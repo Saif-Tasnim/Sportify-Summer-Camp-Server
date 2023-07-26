@@ -126,14 +126,20 @@ async function run() {
     })
 
     // class collection
-    app.get('/class' , async(req,res)=>{
+    app.get('/class', async (req, res) => {
       const result = await classCollection.find().toArray();
       res.send(result);
     })
-    
-    app.get('/class/:email' , verifyJWT, async(req,res) => {
+
+    app.get('/class/admin/manage', verifyJWT, verifyAdmin, async (req, res) => {
+      const query = { status: 'pending' }
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    app.get('/class/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const query = {email : email};
+      const query = { email: email };
       const result = await classCollection.find(query).toArray();
       res.send(result);
 
@@ -180,7 +186,7 @@ async function run() {
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.JSON_SECRET_KEY, { expiresIn: '1h' })
+      const token = jwt.sign(user, process.env.JSON_SECRET_KEY, { expiresIn: "1h" })
       res.send({ token })
 
     })
