@@ -143,6 +143,22 @@ async function run() {
       res.send(result);
     })
 
+    app.put('/class/admin/deny/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const query = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: 'Denied',
+          feedback: data,
+        }
+      };
+
+      const result = await classCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    })
+
     app.get('/class/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
