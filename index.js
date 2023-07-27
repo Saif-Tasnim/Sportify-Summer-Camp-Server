@@ -131,9 +131,15 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/class/admin/manage', verifyJWT, verifyAdmin, async (req, res) => {
-      const query = { status: 'pending' }
-      const result = await classCollection.find(query).toArray();
+    app.patch('/class/admin/manage/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          status: "Accepted"
+        }
+      }
+      const result = await classCollection.updateOne(query, updateDoc);
       res.send(result);
     })
 
