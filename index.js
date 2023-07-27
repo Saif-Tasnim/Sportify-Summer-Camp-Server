@@ -131,6 +131,12 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/class/filter', async (req, res) => {
+      const query = {status:'Accepted'}
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    })
+
     app.patch('/class/admin/manage/:id', verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
@@ -146,12 +152,13 @@ async function run() {
     app.put('/class/admin/deny/:id', verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
+      // console.log(data.feedback);
       const query = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const updateDoc = {
         $set: {
           status: 'Denied',
-          feedback: data,
+          feedback: data.feedback
         }
       };
 
