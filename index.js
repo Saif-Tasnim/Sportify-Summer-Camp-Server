@@ -184,8 +184,12 @@ async function run() {
     })
 
     // student class route
-    app.get('/student/class/select', verifyJWT, async (req, res) => {
-      const result = await selectedCollection.find().toArray();
+    app.get('/student/class/select/:email', verifyJWT, async (req, res) => {
+      
+      const email = req.params.email;
+      const query = {studentEmail: email};
+      const result = await selectedCollection.find(query).toArray();
+      // console.log(result);
       res.send(result);
     })
 
