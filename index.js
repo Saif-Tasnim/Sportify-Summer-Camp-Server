@@ -4,6 +4,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { populate } = require('dotenv');
 
 const app = express();
 
@@ -56,6 +57,7 @@ async function run() {
 
     const userCollection = client.db("Sportify-Summer-Camp").collection("user");
     const classCollection = client.db("Sportify-Summer-Camp").collection("class");
+    const selectedCollection = client.db("Sportify-Summer-Camp").collection('selected');
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -132,7 +134,7 @@ async function run() {
     })
 
     app.get('/class/filter', async (req, res) => {
-      const query = {status:'Accepted'}
+      const query = { status: 'Accepted' }
       const result = await classCollection.find(query).toArray();
       res.send(result);
     })
@@ -179,6 +181,28 @@ async function run() {
       const result = await classCollection.insertOne(data);
       res.send(result);
 
+    })
+
+    // student class route
+    app.get('/student/class/select', verifyJWT, async (req, res) => {
+      const result = await selectedCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.post('/student/class/select', verifyJWT, async (req, res) => {
+      const data = req.body;
+      const id = data.id;
+      const email = data.studentEmail;
+      const query = { _id: id, studentEmail: email }
+
+      const find = selectedCollection.find(query);
+
+      if (find) {
+        return res.send({ error: true, message: "Already added" });
+      }
+
+      const result = await selectedCollection.insertOne(data);
+      res.send(result);
     })
 
 
