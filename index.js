@@ -237,6 +237,12 @@ async function run() {
     })
 
     // get instructor routes
+    app.get('/instructors', async (req, res) => {
+      const query = { role: 'Instructor' };
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    })
+
     app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
