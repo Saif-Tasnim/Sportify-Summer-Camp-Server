@@ -185,9 +185,9 @@ async function run() {
 
     // student class route
     app.get('/student/class/select/:email', verifyJWT, async (req, res) => {
-      
+
       const email = req.params.email;
-      const query = {studentEmail: email};
+      const query = { studentEmail: email };
       const result = await selectedCollection.find(query).toArray();
       // console.log(result);
       res.send(result);
@@ -195,17 +195,28 @@ async function run() {
 
     app.post('/student/class/select', verifyJWT, async (req, res) => {
       const data = req.body;
-      const id = data.id;
+      const id = data._id;
+      // console.log(id);
       const email = data.studentEmail;
-      const query = { _id: id, studentEmail: email }
+      const query = { _id: id, studentEmail: email };
 
-      const find = selectedCollection.find(query);
+      const find = await selectedCollection.findOne(query);
+      // console.log(find);
 
       if (find) {
         return res.send({ error: true, message: "Already added" });
       }
 
       const result = await selectedCollection.insertOne(data);
+      res.send(result);
+    })
+
+    app.delete('/student/class/select/:id', verifyJWT, async (req, res) => {
+
+      const id = req.params.id;
+      const query = { _id: id };
+      const result = await selectedCollection.deleteOne(query);
+      // console.log(result);
       res.send(result);
     })
 
