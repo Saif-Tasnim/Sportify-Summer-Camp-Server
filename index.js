@@ -4,7 +4,6 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { populate } = require('dotenv');
 const stripe = require('stripe')(process.env.STRIPE_SK_TEST);
 
 const app = express();
@@ -77,6 +76,14 @@ async function run() {
 
       next();
     }
+
+    // home page instructor & course data
+
+    app.get('/instructors/limit', async (req, res) => {
+      const query = { role: "Instructor" }
+      const result = await userCollection.find(query).limit(6).toArray();
+      res.send(result);
+    })
 
     // user info
     app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
