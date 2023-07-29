@@ -286,6 +286,13 @@ async function run() {
 
       res.send(result);
     })
+    app.get('/myPayment/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { studentEmail: email };
+      const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
+
+      res.send(result);
+    })
 
     // stripe payment intent create
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
@@ -310,14 +317,22 @@ async function run() {
 
     // store payment table data
     app.post('/payment', verifyJWT, async (req, res) => {
+
       const data = req.body;
+
+      const name = data.className;
+      const email = data.studentEmail;
+      const paymentQuery = { studentEmail: email, className: name };
+      const findPrev = await paymentCollection.findOne(paymentQuery);
+      if (findPrev) {
+        return res.send({ error: "already exist" })
+      }
+
       const insertedRes = await paymentCollection.insertOne(data);
 
       // update classes documents
-      const id = data._id;
-      const query = { _id: new ObjectId(id) }
-
-      const find = classCollection.findOne(query);
+      const query = { className: name }
+      const find = await classCollection.findOne(query);
       const enrolled = await find.enrolled ? find.enrolled : 0;
       const updateValue = enrolled + 1;
 
@@ -326,12 +341,15 @@ async function run() {
       const updateDoc = {
         $set: {
           enrolled: updateValue
-        }
+        },
+        // $setOnInsert: {
+        //   studentEmail: email,
+        // },
       }
       const updateRes = await classCollection.updateOne(query, updateDoc, options);
 
       // delete query from selected class
-      const deleteQuery = { _id: id }
+      const deleteQuery = { className: name }
       const deleteRes = await selectedCollection.deleteOne(deleteQuery);
 
       res.send({ insertedRes, updateRes, deleteRes })
