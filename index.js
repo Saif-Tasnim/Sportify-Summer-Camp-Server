@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { populate } = require('dotenv');
+const stripe = require('stripe')(process.env.STRIPE_SK_TEST);
 
 const app = express();
 
@@ -193,6 +194,17 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/student/class/select', async (req, res) => {
+
+      const email = req.query.email;
+      const id = req.query.id;
+
+      const query = { studentEmail: email, _id: id };
+      const result = await selectedCollection.findOne(query);
+      // console.log(result);
+      res.send(result);
+    })
+
     app.post('/student/class/select', verifyJWT, async (req, res) => {
       const data = req.body;
       const id = data._id;
@@ -264,6 +276,30 @@ async function run() {
       res.send({ token })
 
     })
+
+    // stripe payment intent create
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+      
+      if (amount < 0 || !Number.isFinite(amount)) {
+        return res.send("Not a number");
+
+      }
+
+      // console.log(amount);
+      // console.log(typeof amount);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
   } finally {
     // Ensures that the client will close when you finish/error
