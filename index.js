@@ -59,6 +59,7 @@ async function run() {
     const userCollection = client.db("Sportify-Summer-Camp").collection("user");
     const classCollection = client.db("Sportify-Summer-Camp").collection("class");
     const selectedCollection = client.db("Sportify-Summer-Camp").collection('selected');
+    const paymentCollection = client.db("Sportify-Summer-Camp").collection('payment');
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -281,14 +282,11 @@ async function run() {
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = price * 100;
-      
+
       if (amount < 0 || !Number.isFinite(amount)) {
         return res.send("Not a number");
 
       }
-
-      // console.log(amount);
-      // console.log(typeof amount);
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -300,6 +298,35 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
+
+    // store payment table data
+    app.post('/payment', verifyJWT, async (req, res) => {
+      const data = req.body;
+      const insertedRes = await paymentCollection.insertOne(data);
+
+      // update classes documents
+      const id = data._id;
+      const query = { _id: new ObjectId(id) }
+
+      const find = classCollection.findOne(query);
+      const enrolled = await find.enrolled ? find.enrolled : 0;
+      const updateValue = enrolled + 1;
+
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          enrolled: updateValue
+        }
+      }
+      const updateRes = await classCollection.updateOne(query, updateDoc, options);
+
+      // delete query from selected class
+      const deleteQuery = { _id: id }
+      const deleteRes = await selectedCollection.deleteOne(deleteQuery);
+
+      res.send({ insertedRes, updateRes, deleteRes })
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
