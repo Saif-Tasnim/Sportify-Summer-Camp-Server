@@ -278,6 +278,15 @@ async function run() {
 
     })
 
+    // payment / enrolled course api
+    app.get('/payment/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { studentEmail: email };
+      const result = await paymentCollection.find(query).toArray();
+
+      res.send(result);
+    })
+
     // stripe payment intent create
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
